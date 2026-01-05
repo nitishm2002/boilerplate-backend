@@ -1,38 +1,37 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import * as Utils from '../../lib/utils';
-import customerJobService from '../../services/customer/job.service';
+import authService from '../../services/auth/auth.service';
 import {
+  ChangeEmailData,
+  ChangeEmailVerifyOTPData,
+  ChangePasswordData,
+  ResetPasswordData,
+  ForgotPasswordData,
   IRequest,
-  CreateJobData,
-  SwipeData,
-  ISearch,
-  LikeProfessionalData,
+  LoginData,
+  LogoutData,
+  RegisterData,
+  VerifyOTPData,
 } from '../../lib/common.interface';
-import paginationConfig from '../../config/pagination.config';
 
-export default new (class CustomerJobController {
-  createJob = (req: IRequest, res: Response): void => {
+export default new (class AuthController {
+  register = (req: IRequest, res: Response): void => {
     try {
-      const body = req.body as Record<string, any>;
-      const userId = req.user.id;
+      const body = req.body as Record<string, string>;
+      const serviceCategory = Array.isArray(body.service_category)
+        ? (body.service_category as number[])
+        : [];
 
-      const args: CreateJobData = {
-        title: body.title,
-        description: body.description,
-        category_id: body.category_id,
-        project_size: body.project_size,
-        budget_min: body.budget_min ? parseFloat(body.budget_min) : undefined,
-        budget_max: body.budget_max ? parseFloat(body.budget_max) : undefined,
-        budget_type: body.budget_type,
-        work_finish_type: body.work_finish_type,
-        work_finish_from: body.work_finish_from,
-        work_finish_to: body.work_finish_to,
-        location: body.location,
-        images: Array.isArray(body.images) ? body.images : [],
+      const args: RegisterData = {
+        name: body.name,
+        email: body.email,
+        password: body.password,
+        role: body.role,
+        service_category: serviceCategory,
       };
 
-      customerJobService
-        .createJob(userId, args)
+      authService
+        .register(args)
         .then((result) => {
           res.status(Utils.statusCode.OK).send(Utils.sendSuccessResponse(result));
         })
@@ -48,40 +47,17 @@ export default new (class CustomerJobController {
     }
   };
 
-  deleteJob = (req: IRequest, res: Response): void => {
+  login = (req: IRequest, res: Response): void => {
     try {
-      const jobId = parseInt(req.params.id);
-      const userId = req.user.id;
-
-      customerJobService
-        .deleteJob(userId, jobId)
-        .then((result) => {
-          res.status(Utils.statusCode.OK).send(Utils.sendSuccessResponse(result));
-        })
-        .catch((err) => {
-          res
-            .status(Utils.getErrorStatusCode(err))
-            .send(Utils.sendErrorResponse(Utils.getErrorMsg(err)));
-        });
-    } catch (err) {
-      res
-        .status(Utils.getErrorStatusCode(err))
-        .send(Utils.sendErrorResponse(Utils.getErrorMsg(err)));
-    }
-  };
-
-  getCustomerJobs = (req: IRequest, res: Response): void => {
-    try {
-      const userId = req.user.id;
-      const args: ISearch = {
-        page: Number(req.query.page) || 1,
-        limit: Number(req.query.limit) || paginationConfig.PER_PAGE,
-        search: (req.query.search as string) || '',
-        status: (req.query.status as string) || '',
+      const body = req.body as Record<string, string>;
+      const args: LoginData = {
+        email: body.email,
+        password: body.password,
+        fcm_token: body.fcm_token,
       };
 
-      customerJobService
-        .getCustomerJobs(args, userId)
+      authService
+        .login(args)
         .then((result) => {
           res.status(Utils.statusCode.OK).send(Utils.sendSuccessResponse(result));
         })
@@ -97,13 +73,18 @@ export default new (class CustomerJobController {
     }
   };
 
-  getJobById = (req: IRequest, res: Response): void => {
+  logout = (req: IRequest, res: Response): void => {
     try {
-      const userId = req.user.id;
-      const jobId = parseInt(req.params.job_id, 10);
+      const body = req.body as Record<string, string>;
+      const token = req.token;
+      const userId = req.user?.id;
+      // const args: LogoutData = {
+      //   // fcm_token: body.fcm_token,
+      //   // user_type: body.user_type,
+      // };
 
-      customerJobService
-        .getJobById(jobId, userId)
+      authService
+        .logout(userId, token)
         .then((result) => {
           res.status(Utils.statusCode.OK).send(Utils.sendSuccessResponse(result));
         })
@@ -119,20 +100,41 @@ export default new (class CustomerJobController {
     }
   };
 
-  getJobProfessionals = (req: IRequest, res: Response): void => {
+  forgotPassword = (req: IRequest, res: Response): void => {
     try {
-      const userId = req.user.id;
-      const args: ISearch = {
-        page: Number(req.query.page) || 1,
-        limit: Number(req.query.limit) || paginationConfig.PER_PAGE,
-        search: (req.query.search as string) || '',
-        pending: typeof req.query.pending === 'string' ? req.query.pending === 'true' : false,
-        accepted: typeof req.query.accepted === 'string' ? req.query.accepted === 'true' : false,
-        completed: typeof req.query.completed === 'string' ? req.query.completed === 'true' : false,
+      const body = req.body as Record<string, string>;
+      const args: ForgotPasswordData = {
+        email: body.email.toLowerCase(),
+      };
+      // const role = req.user.role;
+
+      authService
+        .forgotPassword(args)
+        .then((result) => {
+          res.status(Utils.statusCode.OK).send(Utils.sendSuccessResponse(result));
+        })
+        .catch((err) => {
+          res
+            .status(Utils.getErrorStatusCode(err))
+            .send(Utils.sendErrorResponse(Utils.getErrorMsg(err)));
+        });
+    } catch (err) {
+      res
+        .status(Utils.getErrorStatusCode(err))
+        .send(Utils.sendErrorResponse(Utils.getErrorMsg(err)));
+    }
+  };
+
+  changePassword = (req: IRequest, res: Response): void => {
+    try {
+      const body = req.body as Record<string, string>;
+      const args: ChangePasswordData = {
+        email: body.email.toLowerCase(),
+        password: body.password,
       };
 
-      customerJobService
-        .getJobProfessionals(args, userId)
+      authService
+        .changePassword(args)
         .then((result) => {
           res.status(Utils.statusCode.OK).send(Utils.sendSuccessResponse(result));
         })
@@ -148,41 +150,15 @@ export default new (class CustomerJobController {
     }
   };
 
-  getJobProfessionalDetail = (req: IRequest, res: Response): void => {
+  resetPassword = (req: IRequest, res: Response): void => {
     try {
-      const userId = req.user.id;
-      const jobId = parseInt(req.params.job_id);
-      const professionalId = parseInt(req.params.professional_id);
-
-      customerJobService
-        .getJobProfessionalDetail(userId, jobId, professionalId)
-        .then((result) => {
-          res.status(Utils.statusCode.OK).send(Utils.sendSuccessResponse(result));
-        })
-        .catch((err) => {
-          res
-            .status(Utils.getErrorStatusCode(err))
-            .send(Utils.sendErrorResponse(Utils.getErrorMsg(err)));
-        });
-    } catch (err) {
-      res
-        .status(Utils.getErrorStatusCode(err))
-        .send(Utils.sendErrorResponse(Utils.getErrorMsg(err)));
-    }
-  };
-
-  acceptBid = (req: IRequest, res: Response): void => {
-    try {
-      const body = req.body;
-      const userId = req.user.id;
-      const jobId = parseInt(req.params.job_id);
-      const args = {
-        bid_id: body.bid_id,
-        status: body.status,
+      const body = req.body as Record<string, string>;
+      const args: ResetPasswordData = {
+        password: body.password,
       };
 
-      customerJobService
-        .acceptOrRejectedBid(userId, jobId, args)
+      authService
+        .resetPassword(args, req.user.id)
         .then((result) => {
           res.status(Utils.statusCode.OK).send(Utils.sendSuccessResponse(result));
         })
@@ -198,44 +174,15 @@ export default new (class CustomerJobController {
     }
   };
 
-  getProfessionalsByCategory = (req: IRequest, res: Response): void => {
+  changeEmail = (req: IRequest, res: Response): void => {
     try {
-      const args: ISearch = {
-        page: Number(req.query.page) || 1,
-        limit: Number(req.query.limit) || paginationConfig.PER_PAGE,
-        search: (req.query.search as string) || '',
-      };
-      const categoryId = parseInt(req.params.job_id);
-
-      customerJobService
-        .getProfessionalsByCategory(args, categoryId)
-        .then((result) => {
-          res.status(Utils.statusCode.OK).send(Utils.sendSuccessResponse(result));
-        })
-        .catch((err) => {
-          res
-            .status(Utils.getErrorStatusCode(err))
-            .send(Utils.sendErrorResponse(Utils.getErrorMsg(err)));
-        });
-    } catch (err) {
-      res
-        .status(Utils.getErrorStatusCode(err))
-        .send(Utils.sendErrorResponse(Utils.getErrorMsg(err)));
-    }
-  };
-
-  swipeProfessional = (req: IRequest, res: Response): void => {
-    try {
-      const body = req.body as Record<string, any>;
-      const userId = req.user.id;
-
-      const args: SwipeData = {
-        job_id: parseInt(body.job_id),
-        professional_id: parseInt(body.professional_id),
+      const body = req.body as Record<string, string>;
+      const args: ChangeEmailData = {
+        email: body.email.toLowerCase(),
       };
 
-      customerJobService
-        .swipeProfessional(userId, args)
+      authService
+        .changeEmail(args)
         .then((result) => {
           res.status(Utils.statusCode.OK).send(Utils.sendSuccessResponse(result));
         })
@@ -251,13 +198,17 @@ export default new (class CustomerJobController {
     }
   };
 
-  markJobAsCompleted = (req: IRequest, res: Response): void => {
+  changeEmailVerifyOTP = (req: IRequest, res: Response): void => {
     try {
-      const jobId = parseInt(req.params.job_id);
-      const userId = req.user.id;
+      const body = req.body as Record<string, string>;
+      const args: ChangeEmailVerifyOTPData = {
+        current_email: body.current_email.toLowerCase(),
+        new_email: body.new_email.toLowerCase(),
+        otp: body.otp,
+      };
 
-      customerJobService
-        .markJobAsCompleted(userId, jobId)
+      authService
+        .changeEmailVerifyOTP(args)
         .then((result) => {
           res.status(Utils.statusCode.OK).send(Utils.sendSuccessResponse(result));
         })
@@ -266,6 +217,98 @@ export default new (class CustomerJobController {
             .status(Utils.getErrorStatusCode(err))
             .send(Utils.sendErrorResponse(Utils.getErrorMsg(err)));
         });
+    } catch (err) {
+      res
+        .status(Utils.getErrorStatusCode(err))
+        .send(Utils.sendErrorResponse(Utils.getErrorMsg(err)));
+    }
+  };
+
+  me = (req: IRequest, res: Response): void => {
+    try {
+      const userId = req.user.id;
+      authService
+        .me(userId)
+        .then((result) => {
+          res.status(Utils.statusCode.OK).send(Utils.sendSuccessResponse(result));
+        })
+        .catch((err) => {
+          res
+            .status(Utils.getErrorStatusCode(err))
+            .send(Utils.sendErrorResponse(Utils.getErrorMsg(err)));
+        });
+    } catch (err) {
+      res
+        .status(Utils.getErrorStatusCode(err))
+        .send(Utils.sendErrorResponse(Utils.getErrorMsg(err)));
+    }
+  };
+
+  verifyOTP = (req: IRequest, res: Response): void => {
+    try {
+      const body = req.body as Record<string, string>;
+      const otp_type = req.params.type;
+      console.log('otp_type: ', otp_type);
+      const args: VerifyOTPData = {
+        email: body.email,
+        otp_type,
+        otp: body.otp,
+      };
+
+      authService
+        .verifyOTP(args)
+        .then((result) => {
+          res.status(Utils.statusCode.OK).send(Utils.sendSuccessResponse(result));
+        })
+        .catch((err) => {
+          res
+            .status(Utils.getErrorStatusCode(err))
+            .send(Utils.sendErrorResponse(Utils.getErrorMsg(err)));
+        });
+    } catch (err) {
+      res
+        .status(Utils.getErrorStatusCode(err))
+        .send(Utils.sendErrorResponse(Utils.getErrorMsg(err)));
+    }
+  };
+
+  resendOTP = (req: IRequest, res: Response): void => {
+    try {
+      const body = req.body as Record<string, string>;
+      const otp_type = req.params.type as 'register' | 'forgot_password';
+
+      const args: Record<string, string> = {
+        email: body.email,
+        otp_type,
+      };
+
+      authService
+        .resendOtp(args)
+        .then((result) => {
+          res.status(Utils.statusCode.OK).send(Utils.sendSuccessResponse(result));
+        })
+        .catch((err) => {
+          res
+            .status(Utils.getErrorStatusCode(err))
+            .send(Utils.sendErrorResponse(Utils.getErrorMsg(err)));
+        });
+    } catch (err) {
+      res
+        .status(Utils.getErrorStatusCode(err))
+        .send(Utils.sendErrorResponse(Utils.getErrorMsg(err)));
+    }
+  };
+
+  UpdateProfile = (req: IRequest, res: Response) => {
+    try {
+      authService
+        .updateProfile(req.body, req.user.id)
+        .then((result) => res.status(Utils.statusCode.OK).send(Utils.sendSuccessResponse(result)))
+        .catch((err) =>
+          res
+            .status(Utils.getErrorStatusCode(err))
+            .send(Utils.sendErrorResponse(Utils.getErrorMsg(err))),
+        );
     } catch (err) {
       res
         .status(Utils.getErrorStatusCode(err))

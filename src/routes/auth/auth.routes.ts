@@ -1,6 +1,6 @@
 import express from 'express';
 import ValidationMiddleware from '../../middleware/validation.middleware';
-import CustomerAuthController from '../../controller/common/auth.controller';
+import CustomerAuthController from '../../controller/auth/auth.controller';
 import * as AuthGard from '../../middleware/authGard.middleware';
 import multer from 'multer';
 import { singleProfileImageUpload } from '../../lib/fileUpload.utils';

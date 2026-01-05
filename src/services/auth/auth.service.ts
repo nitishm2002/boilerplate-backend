@@ -12,14 +12,14 @@ import {
 import { Op } from 'sequelize';
 import * as Utils from '../../lib/utils';
 import * as JwtUtils from '../../lib/jwt.utils';
-import RedisHelper from '../../lib/redis.helper';
+// import RedisHelper from '../../lib/redis.helper';
 import * as HashUtils from '../../lib/hash.utils';
-import generateOTP from '../../utils/generateOTP';
+import generateOTP from '../../utils/generateOTP.utils';
 import { removeFileFromS3 } from '../../lib/aws.utils';
 import { SuccessMsg, ErrorMsg, OTPType, AccountStatus, UserType } from '../../lib/constants';
 import { IUser, User } from '../../models/user.model';
 import { handleOTP } from '../../lib/saveOTP';
-import { sendAccountVerifyOtp, sendPasswordResetOTP } from '../../utils/sendEmail';
+// import { sendAccountVerifyOtp, sendPasswordResetOTP } from '../../utils/sendEmail.utils';
 import { IToken, Token } from '../../models/token.model';
 import AWSUtils from '../../config/aws.config';
 import { JobCategory } from '../../models/jobCategory.model';
@@ -85,7 +85,7 @@ export default new (class AuthService {
     // Generate OTP and send email
     const OTP = generateOTP();
     await handleOTP(newUser.id, OTPType.TYPE.register, OTP, role, email);
-    await sendAccountVerifyOtp(newUser, OTP);
+    // await sendAccountVerifyOtp(newUser, OTP);
 
     // ----------------------------------------------------
     // ⭐ Final response: service_category as array of objects
@@ -145,7 +145,7 @@ export default new (class AuthService {
       type: customer.role,
     });
 
-    await RedisHelper.sAdd(`${customer.role}:${customer.id}.token`, jwtToken);
+    // await RedisHelper.sAdd(`${customer.role}:${customer.id}.token`, jwtToken);
     let serviceCategoryResponse: Array<{ id: number; name: string }> = [];
 
     if (customer.role === UserType.TYPE.professional && Array.isArray(customer.service_category)) {
@@ -180,7 +180,7 @@ export default new (class AuthService {
 
     //   await User.update({ fcm_token: updatedTokens }, { where: { id: userId } });
     // }
-    await RedisHelper.sRem(`${user.role}:${user.id}.token`, token);
+    // await RedisHelper.sRem(`${user.role}:${user.id}.token`, token);
 
     return {
       message: SuccessMsg.USER.logout,
@@ -201,7 +201,7 @@ export default new (class AuthService {
     const OTP = generateOTP();
 
     // Send OTP
-    await sendPasswordResetOTP(user, OTP);
+    // await sendPasswordResetOTP(user, OTP);
 
     // Check existing token
     const existingToken = await Token.findOne({
@@ -250,7 +250,7 @@ export default new (class AuthService {
       type: user.role,
     });
 
-    await RedisHelper.sAdd(`${user.role}:${user.id}.token`, jwtToken);
+    // await RedisHelper.sAdd(`${user.role}:${user.id}.token`, jwtToken);
 
     return {
       message: SuccessMsg.AUTH.passwordChange,
@@ -392,7 +392,7 @@ export default new (class AuthService {
       type: customer.role,
     });
 
-    await RedisHelper.sAdd(`${customer.role}:${customer.id}.token`, jwtToken);
+    // await RedisHelper.sAdd(`${customer.role}:${customer.id}.token`, jwtToken);
 
     return {
       message: SuccessMsg.AUTH.verifyOTP,
@@ -455,7 +455,7 @@ export default new (class AuthService {
       { where: { id: token.id } }, // condition
     );
 
-    await sendAccountVerifyOtp(user, OTP);
+    // await sendAccountVerifyOtp(user, OTP);
 
     return {
       message: SuccessMsg.USER.sendOtp,

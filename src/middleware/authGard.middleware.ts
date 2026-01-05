@@ -1,7 +1,7 @@
 import * as Utils from '../lib/utils';
 import * as JwtUtils from '../lib/jwt.utils';
 import { ErrorMsg, UserType } from '../lib/constants';
-import RedisHelper from '../lib/redis.helper';
+// import RedisHelper from '../lib/redis.helper';
 import { Response, NextFunction } from 'express';
 import { IRequest } from '../lib/common.interface';
 
@@ -27,27 +27,30 @@ function verifyAccessToken(allowedRoles?: string[]) {
       JwtUtils.verifyTokenData(bearerToken)
         .then((response: any) => {
           const tokenData = response as TokenPayload;
-          
+
           // Check role if allowedRoles is specified
           if (allowedRoles && allowedRoles.length > 0) {
             if (!allowedRoles.includes(tokenData.type)) {
               return res
                 .status(Utils.statusCode.FORBIDDEN)
-                .send(Utils.sendErrorResponse(Utils.getErrorMsg('Access denied. Invalid user role.')));
+                .send(
+                  Utils.sendErrorResponse(Utils.getErrorMsg('Access denied. Invalid user role.')),
+                );
             }
           }
 
           req.user = tokenData as any;
           req.token = bearerToken;
-          RedisHelper.sIsMember(`${tokenData.type}:${tokenData.id}.token`, bearerToken)
-            .then(() => {
-              next();
-            })
-            .catch(() => {
-              return res
-                .status(Utils.statusCode.UNAUTHORIZED)
-                .send(Utils.sendErrorResponse(Utils.getErrorMsg(ErrorMsg.USER.sessionExpire)));
-            });
+          // RedisHelper.sIsMember(`${tokenData.type}:${tokenData.id}.token`, bearerToken)
+          //   .then(() => {
+          //     next();
+          //   })
+          //   .catch(() => {
+          //     return res
+          //       .status(Utils.statusCode.UNAUTHORIZED)
+          //       .send(Utils.sendErrorResponse(Utils.getErrorMsg(ErrorMsg.USER.sessionExpire)));
+          //   });
+          next();
         })
         .catch((error: Error) => {
           return res
@@ -76,4 +79,9 @@ function verifyUserAccessToken(req: IRequest, res: Response, next: NextFunction)
   return verifyAccessToken([UserType.TYPE.customer, UserType.TYPE.professional])(req, res, next);
 }
 
-export { verifyAccessToken, verifyCustomerAccessToken, verifyProfessionalAccessToken, verifyUserAccessToken };
+export {
+  verifyAccessToken,
+  verifyCustomerAccessToken,
+  verifyProfessionalAccessToken,
+  verifyUserAccessToken,
+};

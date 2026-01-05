@@ -1,5 +1,5 @@
-import config from './config';
+// import config from './config';
 
-export default {
-  url: config.REDIS_URL,
-};
+// export default {
+//   url: config.REDIS_URL,
+// };

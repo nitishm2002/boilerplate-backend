@@ -1,21 +1,21 @@
-import * as redis from 'redis';
-import redisConfig from '../config/redis.config';
-import logger from './logger';
+// import * as redis from 'redis';
+// import redisConfig from '../config/redis.config';
+// import logger from './logger';
 
-let redisClient: redis.RedisClientType; // redis.RedisClientType;
+// let redisClient: redis.RedisClientType; // redis.RedisClientType;
 
-void (async () => {
-  try {
-    redisClient = redis.createClient({
-      url: redisConfig.url,
-    });
+// void (async () => {
+//   try {
+//     redisClient = redis.createClient({
+//       url: redisConfig.url,
+//     });
 
-    redisClient.on('error', (error: Error) => logger.error(`Error : ${error?.message}`));
+//     redisClient.on('error', (error: Error) => logger.error(`Error : ${error?.message}`));
 
-    await redisClient.connect();
-  } catch (err) {
-    logger.error(`Error : ${err}`);
-  }
-})();
+//     await redisClient.connect();
+//   } catch (err) {
+//     logger.error(`Error : ${err}`);
+//   }
+// })();
 
-export default redisClient;
+// export default redisClient;
