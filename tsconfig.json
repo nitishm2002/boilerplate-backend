@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "es6",
+    "noImplicitAny": true,
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "resolveJsonModule": true,
+    "outDir": "./dest",
+    "baseUrl": ".",
+    "lib": ["es2018", "dom", "es5", "es6"],
+    "ignoreDeprecations": "5.0"
+  },
+  "include": [
+    "src/*.ts",
+    "src/**/*.ts",
+    "test/*.ts",
+    "test/**/*.ts",
+    "tests/api.js",
+    "ormconfig.ts",
+    "src/migrations/**/*.js", // include migrations folder
+    "src/seeds/**/*.js"
+  ],
+  "exclude": ["node_modules", "coverage", "__tests__", "jest.config.js"]
+}
